@@ -41,7 +41,7 @@ class TicTacToe(Game):
     def __init__(self, h=3, v=3, k=3):
         update(self, h=h, v=v, k=k)
         moves = [(x, y) for x in range(1, h+1)
-                 for y in range(1, v+1)]
+                for y in range(1, v+1)]
         self.initial = Struct(to_move='X', utility=0, board={}, moves=moves)
 
     def moves_possible(self, state):
@@ -169,3 +169,30 @@ def alphabeta_pruning_search(state, game, d=4, cutoff_test=cutoff_test, eval_fun
     player = game.to_move(state)
     action, state = argmax(game.possible_successors(state), lambda ((a, s)): min_prune_value(s, -infinity, infinity, 0, game))
     return action
+
+if __name__ == "__main__":
+
+    #Implementation
+    gameImpl = TicTacToe()
+
+    #Start with initial state
+    gameState = gameImpl.initial
+
+    while (gameImpl.terminate(gameState) == False):
+
+        # 'X' played by hooman
+        print "Current move by: " + gameState.to_move
+        if(gameState.to_move == 'X'):
+            print "Enter co-ordinates: "
+            inp = map(int, raw_input().split(" "))
+            xy = (inp[0], inp[1])
+
+            # Play selected move and update state
+            gameState = gameImpl.play_move(move = xy, state = gameState)
+            gameImpl.display(gameState)
+
+        else:
+            # Should return the action to be performed. Error here.
+            action = alphabeta_pruning_search(gameState, gameImpl)
+            print action
+            break
