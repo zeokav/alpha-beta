@@ -40,8 +40,7 @@ class TicTacToe(Game):
     """
     def __init__(self, h=3, v=3, k=3):
         update(self, h=h, v=v, k=k)
-        moves = [(x, y) for x in range(1, h+1)
-                 for y in range(1, v+1)]
+        moves = [(x, y) for x in range(1, h+1) for y in range(1, v+1)]
         self.initial = Struct(to_move='X', utility=0, board={}, moves=moves)
 
     def moves_possible(self, state):
@@ -130,42 +129,52 @@ def alphabeta_full_search(state, game):
     action, state = argmax(game.possible_successors(state), lambda ((a, s)): min_full_value(s, -infinity, infinity, game))
     return action
 
-def cutoff_test(state, depth, game):
-    cutoff_test = None
-    cutoff_test = (cutoff_test or (lambda state, depth: depth>d or game.terminate(state)))
-    return cutoff_test
+"""
+search upto cutoff depth
+"""
+def alphabeta_pruning_search(state, game, d=3, cutoff_test=None, eval_function=None):
+    player = game.to_move(state)
 
-def eval_function(state, game):
-    eval_fn = None
-    eval_fn = eval_fn or (lambda state: game.current_state(state, player))
-    return eval_fn
-
-def max_prune_value(state, alpha, beta, depth, game):
-        if cutoff_test(state, depth, game):
-            return eval_function(state, game)
+    def max_prune_value(state, alpha, beta, depth):
+        if cutoff_test(state, depth):
+            return eval_function(state)
         v = -infinity
         for (a, s) in game.possible_successors(state):
-            v = max(v, min_prune_value(s, alpha, beta, depth+1, game))
+            v = max(v, min_prune_value(s, alpha, beta, depth+1))
             if v >= beta:
                 return v
             alpha = max(alpha, v)
         return v
 
-def min_prune_value(state, alpha, beta, depth, game):
-    if cutoff_test(state, depth, game):
-        return eval_function(state, game)
-    v = infinity
-    for (a, s) in game.possible_successors(state):
-        v = min(v, max_prune_value(s, alpha, beta, depth+1, game))
-        if v <= alpha:
-            return v
-        beta = min(beta, v)
-    return v
+    def min_prune_value(state, alpha, beta, depth):
+        if cutoff_test(state, depth):
+            return eval_function(state)
+        v = infinity
+        for (a, s) in game.possible_successors(state):
+            v = min(v, max_prune_value(s, alpha, beta, depth+1))
+            if v <= alpha:
+                return v
+            beta = min(beta, v)
+        return v
 
-"""
-search upto cutoff depth
-"""
-def alphabeta_pruning_search(state, game, d=4, cutoff_test=cutoff_test, eval_function=eval_function):
-    player = game.to_move(state)
-    action, state = argmax(game.possible_successors(state), lambda ((a, s)): min_prune_value(s, -infinity, infinity, 0, game))
+    cutoff_test = (cutoff_test or (lambda state, depth: depth>d or game.terminate(state)))
+    eval_function = eval_function or (lambda state: game.current_state(state))
+    action, state = argmax(game.possible_successors(state), lambda ((a, s)): min_prune_value(s, -infinity, infinity, 0))
     return action
+
+if __name__ == '__main__':
+    new_game = TicTacToe()
+    game_state = new_game.initial
+    while (new_game.terminate(game_state) == False):
+        print "Current move by: " + game_state.to_move
+        if(game_state.to_move == 'X'):
+            print "Enter co-ordinates: "
+            inp = map(int, raw_input().split(" "))
+            xy = (inp[0], inp[1])
+            game_state = new_game.play_move(move = xy, state = game_state)
+            new_game.display(game_state)
+        else:
+            action = alphabeta_pruning_search(game_state, new_game)
+            print action
+            break
+
