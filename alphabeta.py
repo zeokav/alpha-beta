@@ -175,6 +175,5 @@ if __name__ == '__main__':
             new_game.display(game_state)
         else:
             action = alphabeta_pruning_search(game_state, new_game)
-            print action
-            break
-
+            game_state = new_game.play_move(move = action, state = game_state)
+            new_game.display(game_state)
